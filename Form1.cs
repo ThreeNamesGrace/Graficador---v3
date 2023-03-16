@@ -164,15 +164,16 @@ namespace Graficador___v3
                                                     //Sólo debe de haber una hoja de trabajo.
             }
 
-            //Iteramos por cada hoja de gráfica y las borramos.
-            while(currentApplication.Charts.Count > 0)
-            {
-                currentApplication.WindowState = Excel.XlWindowState.xlMaximized; //Maximizamos la ventana de la aplicación de Excel abierta.
-                SetForegroundWindow(currentApplication.Hwnd); //Hacemos la ventana de la aplicación esté al frente.
-                
-                currentWorkbook.Charts.Item[1].Delete(); //Borramos cada hoja de gráfica.
-                
-            }
+            ////Iteramos por cada hoja de gráfica y las borramos.
+            //while(currentApplication.Charts.Count > 0)
+            //{
+            //    currentApplication.WindowState = Excel.XlWindowState.xlMaximized; //Maximizamos la ventana de la aplicación de Excel abierta.
+            //    SetForegroundWindow(currentApplication.Hwnd); //Hacemos la ventana de la aplicación esté al frente.
+            //    currentApplication.DisplayAlerts = false; //Para que no tengamos que presionar Enter cada vez que se borra un ChartSheet.
+            //    currentWorkbook.Charts.Item[1].Delete(); //Borramos cada hoja de gráfica.
+            //    currentApplication.DisplayAlerts = true; //Reactivamos las DialogBoxes.
+                               
+            //}
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -211,7 +212,7 @@ namespace Graficador___v3
             //Para trabajar con cada gráfica.
             for (int i = 1; i <= numberOfTables; i++)
             {
-                GráficasFrecuenciaGanancia[i - 1] = currentWorkbook.Charts.Add(Type.Missing, Type.Missing, Type.Missing, Type.Missing); //Colocamos una hoja de trabajo para gráficas y la asignamos al objeto.
+                GráficasFrecuenciaGanancia[i - 1] = currentWorkbook.Charts.Add(); //Colocamos una hoja de trabajo para gráficas y la asignamos al objeto.
                                
                 if (GráficasFrecuenciaGanancia[i-1] == null)
                 {
@@ -231,11 +232,57 @@ namespace Graficador___v3
                     ExtraTitle: "Extra"
                     );
 
-                GráficasFrecuenciaGanancia[i - 1].ChartType = XlChartType.xlLineMarkers;
-                GráficasFrecuenciaGanancia[i-1].HasTitle = true;
-                //Excel.ChartTitle TítuloGráfica = null;
-                //TítuloGráfica = GráficasFrecuenciaGanancia[i - 1].ChartTitle;
-                //TítuloGráfica.Text = allTheCells.Item[1 + ((i - 1) * 54), 1].Value2;
+                //foreach(Process proceso in ExcelProcesses)
+                //{
+                //    proceso.Kill();
+                //}
+                
+                Excel.Characters TítuloGráfica = null; //Creamos un objecto Characters para ponerle título a la gráfica.
+                string dummyString = null; //Creamos un string para guardar el título que le vamos a poner a la gráfica.
+                dummyString = Convert.ToString(allTheCells.Item[1 + ((i - 1) * 54), 1].Value2); //Obtenenmos el título de la gráfica y lo guardamos en la variable temporal.
+                dummyString = dummyString.Trim('\t', '\r', '\n'); //Quitamos los caracteres de escape que dan error.
+                dummyString = dummyString.Substring(108);
+
+                //Hacemos lo anterior antes de llenar la gráfica con datos.
+                //Lo siguiente se explica por sí mismo.
+                GráficasFrecuenciaGanancia[i - 1].HasLegend = true; //Activamos que tenga leyenda.
+                GráficasFrecuenciaGanancia[i - 1].ChartWizard( //Utilizamos el ChartWizard para ayudarnos a hacer las gráficas.
+                    Gallery: XlChartType.xlXYScatterLines,
+                    PlotBy: XlRowCol.xlColumns,                    
+                    SeriesLabels: 5,
+                    HasLegend: true,
+                    Title: dummyString,
+                    CategoryTitle: "Frecuencias (Hz)",
+                    ValueTitle: "Ganancias (dB)"
+                    //ExtraTitle: "Extra"
+                    );
+
+                GráficasFrecuenciaGanancia[i - 1].ChartType = XlChartType.xlXYScatterLines;
+                GráficasFrecuenciaGanancia[i - 1].HasTitle = true; //Activamos que tenga título.
+                TítuloGráfica = GráficasFrecuenciaGanancia[i - 1].ChartTitle.Characters; //Pasamos el título de la gráfica al objeto indicado.
+                currentWorkbook.Activate(); //Activamos el libro de trabajo.
+                TítuloGráfica.Text = dummyString;
+
+                //Asignamos el string a la propiedad Text; le ponemos el texto al...
+                //título de la gráfica.
+
+                //if (dummyString == null) //Checamos si el string que vamos a asignar no está en blanco.
+                //{
+                //    MessageBox.Show("Object is Null", "Null object"); //Mandamos un aviso de que la celda de la que se obtiene el string está vacía.
+                //}
+
+                //try
+                //{
+
+
+                //}
+                //catch (COMException ex) //Atrapamos la excepción que sale.
+                //{
+                //    Debug.Write(ex.Message + "\n"); //Mostramos la excepción en la consola.
+                //    Debug.WriteLine(ex.HResult.ToString("X")); //Mostramos su identificador HResult.
+                //    Debug.WriteLine(dummyString); //Mostramos si el string está vacío o si estuvo vacío.
+                //    Debug.WriteLine("");
+                //}
 
                 //Asignamos las celdas a las variables especificadas.
                 //Para las ganancias:
@@ -266,29 +313,67 @@ namespace Graficador___v3
                 {
                     ColecciónDeSeries[i - 1].Item(1).Delete();  //Borramos cada series.
                     //Cada vez que se borra una series, la siguiete serie se vuelve la primera.
-                    //Borramos todas las series porque la gráfica debe estar vacía desde su creación.
-                                                                
+                    //Borramos todas las series porque la gráfica debe estar vacía desde su creación.                                                                
                 }
-                                             
+                List<String> frecuenciasEnStrings = new List<String>(); //Creamos una lista para guardar las frecuencias para hacer la gráfica logaritmica.
+                                                                          
+                foreach(Excel.Range celda in rangeOfFrequencies) //Para obtener los valores de las celdas y convertirlas en strings.
+                {
+                    frecuenciasEnStrings.Add(Convert.ToString(celda.Value2)); //Agregamos cada valor de frecuencia en la lista de strings.
+                    //Debug.WriteLine(frecuenciasEnStrings[frecuenciasEnStrings.Count() - 1].Contains("k"));
+                    if(frecuenciasEnStrings[frecuenciasEnStrings.Count() - 1] == null) //Vemos si el elemento no es nulo
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        if (frecuenciasEnStrings[frecuenciasEnStrings.Count() - 1].Contains("k")) //Buscamos si el último string contiene kilo.
+                        {
+                            frecuenciasEnStrings[frecuenciasEnStrings.Count() - 1] = frecuenciasEnStrings[frecuenciasEnStrings.Count() - 1].Replace("k", "000"); //Reemplazamos "k" por los ceros que representa.
+                        }
+                        if (frecuenciasEnStrings[frecuenciasEnStrings.Count() - 1].Contains("M")) //Buscamos si el último string contiene mega.
+                        {
+                            frecuenciasEnStrings[frecuenciasEnStrings.Count() - 1] = frecuenciasEnStrings[frecuenciasEnStrings.Count() - 1].Replace("M", "000000"); //Reemplazamos "M" por los ceros que representa.
+                        }
+                    }                    
+                }
+                if(frecuenciasEnStrings[frecuenciasEnStrings.Count() - 1] == null)
+                {
+                    frecuenciasEnStrings.RemoveAt(frecuenciasEnStrings.Count() - 1);
+                }
 
+                List<int> frecuenciasEnEnteros = new List<int>(); //Creamos una lista de números enteros que son las frecuencias.
+                foreach(string elemento in frecuenciasEnStrings) //Para convertir los strings anteriores en números enteros.
+                {
+                    frecuenciasEnEnteros.Add(Convert.ToInt32(elemento)); //Convertimos cada string en un entero.
+                }
+
+                int[] frecuencias = frecuenciasEnEnteros.ToArray(); 
                 for (int j = 5 * (i - 1); j < 5 * (i); j++) //Ciclamos en las 5 mediciones.
                 {                                 
                     SeriesDeDatos[j] = ColecciónDeSeries[i - 1].NewSeries(); //Creamos una nueva serie en la gráfica.
                     //SeriesDeDatos[j].ClearFormats();
-                    SeriesDeDatos[j].XValues = rangeOfFrequencies.Cells; //Introducimos el rango de celdas donde se encuentran las frecuencias.
+                    SeriesDeDatos[j].XValues = frecuencias; //Introducimos el rango de celdas donde se encuentran las frecuencias.
                     SeriesDeDatos[j].Values = rangesOfGains[j % 5]; //Introducimos el rango de celdas donde se encuentran las ganancias.
                     //Usamos modulo para sacar valores desde cero a 5.
                     SeriesDeDatos[j].Name = "Medición #" + ((j % 5) + 1).ToString(); //Le ponemos nombre a cada serie.
                 }
 
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                
+                
+                //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                
                 //Modificamos los ejes.
                 Excel.Axes AxesOfTheChart = null; //Creamos un objeto de colección de ejes.
                 AxesOfTheChart = GráficasFrecuenciaGanancia[i - 1].Axes(); //Enlazamos el objeto con los ejes de la gráfica.
                 Excel.Axis XAxis = AxesOfTheChart.Item(XlAxisType.xlCategory, XlAxisGroup.xlPrimary); //Obtenenmos el eje "X" primario.
                 XAxis.HasMajorGridlines = true; //Activamos las líneas de cuadrícula mayores.
                 XAxis.HasMinorGridlines = true; //Activamos las líneas de cuadrícula menores.
-                XAxis.AxisBetweenCategories = false;
-
+                //xis.AxisBetweenCategories = false;
+                
                 //Hacemos los mismo para el eje "Y".
                 Excel.Axis YAxis = AxesOfTheChart.Item(XlAxisType.xlValue, XlAxisGroup.xlPrimary); //Debemos sacar los primarios, porque son los que se pueden modificar.
                 YAxis.HasMajorGridlines = true; //Activamos líneas de cuadrícula mayores.
@@ -316,10 +401,21 @@ namespace Graficador___v3
                 Excel.Border BordeLíneasMayoresEjeY = LíneasMayoresEjeY.Border; //Creamos el objeto borde y lo enlazamos.
                 BordeLíneasMayoresEjeY.Color = 0xD9D9D9; //Modificamos su color.
 
-                //MessageBox.Show(String.Format("Chart {0}", currentWorkbook.Charts.Item[currentWorkbook.Charts.Count].Name));
+                //para hacer una gráfica semilogarítmica.
+                XAxis.ScaleType = XlScaleType.xlScaleLogarithmic; //Hacemos que el eje "X" sea logaritmico
+                XAxis.LogBase = (double)10; //Ponemos la base del logaritmo.
+                XAxis.MinimumScale = 200; //Ponemos el valor mínimo del eje "X".
+                XAxis.MaximumScale = 20000000; //Ponemos el valor mínimo del eje "X".               
+                YAxis.MinimumScale = -40; //Ponemos el valor mínimo del eje "Y".
+                YAxis.MaximumScale = 0; //Ponemos el valor máximo del eje "Y".
+                XAxis.DisplayUnit = XlDisplayUnit.xlThousands; //Que las etiquetas del eje "X" sean múltiplos de 1000.
+
+                GráficasFrecuenciaGanancia[i - 1].PlotArea.Width = 500; //Que el ancho del gráfico sea de 500 puntos.
+                GráficasFrecuenciaGanancia[i - 1].PlotArea.Height = 500; //Que el alto del gráfico sea de 500 puntos.
             }
 
-
+            Form Form1 = this; //Creamos un objeto Form y le asignamos la ventana de la form con los botones.
+            Form1.Show(); //La mostramos después de que ejecuta todo el código de arriba.
         }
 
 
@@ -380,24 +476,24 @@ namespace Graficador___v3
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
             //Iteramos por cada hoja de trabajo que no sea la principal y las borramos.
-            while (currentWorksheets.Count > 1)
-            {
-                currentApplication.WindowState = Excel.XlWindowState.xlMaximized; //Maximizamos la ventana de la aplicación de Excel abierta.
-                SetForegroundWindow(currentApplication.Hwnd); //Hacemos la ventana de la aplicación esté al frente.
+            //while (currentWorksheets.Count > 1)
+            //{
+            //    currentApplication.WindowState = Excel.XlWindowState.xlMaximized; //Maximizamos la ventana de la aplicación de Excel abierta.
+            //    SetForegroundWindow(currentApplication.Hwnd); //Hacemos la ventana de la aplicación esté al frente.
 
-                currentWorksheets.Item[1].Delete(); //Borramos las demás hojas de trabajo con datos.
-                                                    //Sólo debe de haber una hoja de trabajo.
-            }
+            //    currentWorksheets.Item[1].Delete(); //Borramos las demás hojas de trabajo con datos.
+            //                                        //Sólo debe de haber una hoja de trabajo.
+            //}
 
-            //Iteramos por cada hoja de gráfica y las borramos.
-            while (currentApplication.Charts.Count > 0)
-            {
-                currentApplication.WindowState = Excel.XlWindowState.xlMaximized; //Maximizamos la ventana de la aplicación de Excel abierta.
-                SetForegroundWindow(currentApplication.Hwnd); //Hacemos la ventana de la aplicación esté al frente.
-
-                currentWorkbook.Charts.Item[1].Delete(); //Borramos cada hoja de gráfica.
-
-            }
+            ////Iteramos por cada hoja de gráfica y las borramos.
+            //while (currentApplication.Charts.Count > 0)
+            //{
+            //    currentApplication.WindowState = Excel.XlWindowState.xlMaximized; //Maximizamos la ventana de la aplicación de Excel abierta.
+            //    SetForegroundWindow(currentApplication.Hwnd); //Hacemos la ventana de la aplicación esté al frente.
+            //    currentApplication.DisplayAlerts = false;
+            //    currentWorkbook.Charts.Item[1].Delete(); //Borramos cada hoja de gráfica.
+            //    currentApplication.DisplayAlerts = true;
+            //}
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -436,19 +532,33 @@ namespace Graficador___v3
             //Para trabajar con cada gráfica.
             for (int i = 1; i <= numberOfTables; i++)
             {
-                GráficasFrecuenciaFase[i - 1] = currentWorkbook.Charts.Add(Type.Missing, Type.Missing, Type.Missing, Type.Missing); //Colocamos una hoja de trabajo para gráficas y la asignamos al objeto.
-                               
-                GráficasFrecuenciaFase[i - 1].ChartWizard(
-                    Gallery: XlChartType.xlLineMarkers,
+                GráficasFrecuenciaFase[i - 1] = currentWorkbook.Charts.Add(); //Colocamos una hoja de trabajo para gráficas y la asignamos al objeto.
+
+                Excel.Characters TítuloGráfica = null; //Creamos un objecto Characters para ponerle título a la gráfica.
+                string dummyString = null; //Creamos un string para guardar el título que le vamos a poner a la gráfica.
+                dummyString = Convert.ToString(allTheCells.Item[1 + ((i - 1) * 54), 1].Value2); //Obtenenmos el título de la gráfica y lo guardamos en la variable temporal.
+                dummyString = dummyString.Trim('\t', '\r', '\n'); //Quitamos los caracteres de escape que dan error.
+                dummyString = dummyString.Substring(108);
+
+                //Hacemos lo anterior antes de llenar la gráfica con datos.
+                //Lo siguiente se explica por sí mismo.
+                GráficasFrecuenciaFase[i - 1].HasLegend = true; //Activamos que tenga leyenda.
+                GráficasFrecuenciaFase[i - 1].ChartWizard( //Utilizamos el ChartWizard para ayudarnos a hacer las gráficas.
+                    Gallery: XlChartType.xlXYScatterLines,
                     PlotBy: XlRowCol.xlColumns,
-                    CategoryLabels: 45,
                     SeriesLabels: 5,
                     HasLegend: true,
-                    Title: allTheCells.Item[1 + ((i - 1) * 54), 1].Value,
+                    Title: dummyString,
                     CategoryTitle: "Frecuencias (Hz)",
-                    ValueTitle: "Ganancias (dB)",
-                    ExtraTitle: "Extra"
+                    ValueTitle: "Ganancias (dB)"
+                    //ExtraTitle: "Extra"
                     );
+
+                GráficasFrecuenciaFase[i - 1].ChartType = XlChartType.xlXYScatterLines;
+                GráficasFrecuenciaFase[i - 1].HasTitle = true; //Activamos que tenga título.
+                TítuloGráfica = GráficasFrecuenciaFase[i - 1].ChartTitle.Characters; //Pasamos el título de la gráfica al objeto indicado.
+                currentWorkbook.Activate(); //Activamos el libro de trabajo.
+                TítuloGráfica.Text = dummyString;
 
                 //Asignamos las celdas a las variables especificadas.
                 //Para las ganancias:
@@ -483,12 +593,46 @@ namespace Graficador___v3
 
                 }
 
+                List<String> frecuenciasEnStrings = new List<String>(); //Creamos una lista para guardar las frecuencias para hacer la gráfica logaritmica.
+
+                foreach (Excel.Range celda in rangeOfFrequencies) //Para obtener los valores de las celdas y convertirlas en strings.
+                {
+                    frecuenciasEnStrings.Add(Convert.ToString(celda.Value2)); //Agregamos cada valor de frecuencia en la lista de strings.
+                    //Debug.WriteLine(frecuenciasEnStrings[frecuenciasEnStrings.Count() - 1].Contains("k"));
+                    if (frecuenciasEnStrings[frecuenciasEnStrings.Count() - 1] == null) //Vemos si el elemento no es nulo
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        if (frecuenciasEnStrings[frecuenciasEnStrings.Count() - 1].Contains("k")) //Buscamos si el último string contiene kilo.
+                        {
+                            frecuenciasEnStrings[frecuenciasEnStrings.Count() - 1] = frecuenciasEnStrings[frecuenciasEnStrings.Count() - 1].Replace("k", "000"); //Reemplazamos "k" por los ceros que representa.
+                        }
+                        if (frecuenciasEnStrings[frecuenciasEnStrings.Count() - 1].Contains("M")) //Buscamos si el último string contiene mega.
+                        {
+                            frecuenciasEnStrings[frecuenciasEnStrings.Count() - 1] = frecuenciasEnStrings[frecuenciasEnStrings.Count() - 1].Replace("M", "000000"); //Reemplazamos "M" por los ceros que representa.
+                        }
+                    }
+                }
+                if (frecuenciasEnStrings[frecuenciasEnStrings.Count() - 1] == null)
+                {
+                    frecuenciasEnStrings.RemoveAt(frecuenciasEnStrings.Count() - 1);
+                }
+
+                List<int> frecuenciasEnEnteros = new List<int>(); //Creamos una lista de números enteros que son las frecuencias.
+                foreach (string elemento in frecuenciasEnStrings) //Para convertir los strings anteriores en números enteros.
+                {
+                    frecuenciasEnEnteros.Add(Convert.ToInt32(elemento)); //Convertimos cada string en un entero.
+                }
+
+                int[] frecuencias = frecuenciasEnEnteros.ToArray();
 
                 for (int j = 5 * (i - 1); j < 5 * (i); j++) //Ciclamos en las 5 mediciones.
                 {
                     SeriesDeDatos[j] = ColecciónDeSeries[i - 1].NewSeries(); //Creamos una nueva serie en la gráfica.
                     //SeriesDeDatos[j].ClearFormats();
-                    SeriesDeDatos[j].XValues = rangeOfFrequencies.Cells; //Introducimos el rango de celdas donde se encuentran las frecuencias.
+                    SeriesDeDatos[j].XValues = frecuencias; //Introducimos el rango de celdas donde se encuentran las frecuencias.
                     SeriesDeDatos[j].Values = rangesOfPhase[j % 5]; //Introducimos el rango de celdas donde se encuentran las ganancias.
                     //Usamos modulo para sacar valores desde cero a 5.
                     SeriesDeDatos[j].Name = "Medición #" + ((j % 5) + 1).ToString(); //Le ponemos nombre a cada serie.
@@ -500,8 +644,7 @@ namespace Graficador___v3
                 Excel.Axis XAxis = AxesOfTheChart.Item(XlAxisType.xlCategory, XlAxisGroup.xlPrimary); //Obtenenmos el eje "X" primario.
                 XAxis.HasMajorGridlines = true; //Activamos las líneas de cuadrícula mayores.
                 XAxis.HasMinorGridlines = true; //Activamos las líneas de cuadrícula menores.
-                XAxis.AxisBetweenCategories = false;
-
+                
                 //Hacemos los mismo para el eje "Y".
                 Excel.Axis YAxis = AxesOfTheChart.Item(XlAxisType.xlValue, XlAxisGroup.xlPrimary); //Debemos sacar los primarios, porque son los que se pueden modificar.
                 YAxis.HasMajorGridlines = true; //Activamos líneas de cuadrícula mayores.
@@ -529,10 +672,21 @@ namespace Graficador___v3
                 Excel.Border BordeLíneasMayoresEjeY = LíneasMayoresEjeY.Border; //Creamos el objeto borde y lo enlazamos.
                 BordeLíneasMayoresEjeY.Color = 0xD9D9D9; //Modificamos su color.
 
-                //MessageBox.Show(String.Format("Chart {0}", currentWorkbook.Charts.Item[currentWorkbook.Charts.Count].Name));
+                //para hacer una gráfica semilogarítmica.
+                XAxis.ScaleType = XlScaleType.xlScaleLogarithmic; //Hacemos que el eje "X" sea logaritmico
+                XAxis.LogBase = (double)10; //Ponemos la base del logaritmo.
+                XAxis.MinimumScale = 200; //Ponemos el valor mínimo del eje "X".
+                XAxis.MaximumScale = 2000000; //Ponemos el valor mínimo del eje "X".
+                YAxis.MinimumScale = -60; //Ponemos el valor mínimo del eje "Y".
+                YAxis.MaximumScale = 0; //Ponemos el valor máximo del eje "Y".
+                XAxis.DisplayUnit = XlDisplayUnit.xlThousands; //Que las etiquetas del eje "X" sean múltiplos de 1000.
+
+                GráficasFrecuenciaFase[i - 1].PlotArea.Width = 500; //Que el ancho del área de la gráfica sea de 500 puntos.
+                GráficasFrecuenciaFase[i - 1].PlotArea.Height = 500; //Que el ancho del área de la gráfica sea de 500 puntos.                
             }
 
-
+            Form Form1 = this; //Creamos un objeto Form y le asignamos la ventana de la form con los botones.
+            Form1.Show(); //La mostramos después de que ejecuta todo el código de arriba.
         }
 
         private void BorraGráficas_Click(object sender, EventArgs e)
@@ -600,6 +754,15 @@ namespace Graficador___v3
                 currentWorkbook.Charts.Item[1].Delete(); //Borramos cada hoja de gráfica.
 
             }
+
+            Form Form1 = this; //Creamos un objeto Form y le asignamos la ventana de la form con los botones.
+            Form1.Show(); //La mostramos después de que ejecuta todo el código de arriba.
+        }
+
+        private void CerrarPrograma_Click(object sender, EventArgs e)
+        {
+            Form Form1 = this; //Creamos una instancia Form y le asignamos la ventana de la Form
+            Form1.Close(); //Cerrarmos la aplicación Windows Form.
         }
     }
 
