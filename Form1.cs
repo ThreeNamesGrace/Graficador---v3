@@ -18,6 +18,10 @@ using System.Text.RegularExpressions;
 using System.Runtime.Versioning;
 using System.Security;
 using Microsoft.Win32;
+/*
+using System.Windows.UI.Core.Preview;
+using System.Windows.Media.PlayTo;
+*/
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -169,9 +173,10 @@ namespace Graficador___v3
             {
                 currentApplication.WindowState = Excel.XlWindowState.xlMaximized; //Maximizamos la ventana de la aplicación de Excel abierta.
                 SetForegroundWindow(currentApplication.Hwnd); //Hacemos la ventana de la aplicación esté al frente.
-                
+                currentApplication.DisplayAlerts = false; //Para que no tengamos que presionar Enter cada vez que se borra un ChartSheet.
                 currentWorkbook.Charts.Item[1].Delete(); //Borramos cada hoja de gráfica.
-                
+                currentApplication.DisplayAlerts = true; //Reactivamos las DialogBoxes.
+                               
             }
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -216,27 +221,30 @@ namespace Graficador___v3
                 if (GráficasFrecuenciaGanancia[i-1] == null)
                 {
                     MessageBox.Show("Error", "Null found");                    
-                }                          
-                
+                }
 
-                GráficasFrecuenciaGanancia[i - 1].ChartWizard(
-                    Gallery: XlChartType.xlLineMarkers,
-                    PlotBy: XlRowCol.xlColumns,
-                    CategoryLabels: 45,
-                    SeriesLabels: 5,
-                    HasLegend: true,
-                    Title: allTheCells.Item[1 + ((i - 1) * 54), 1].Value2,
-                    CategoryTitle: "Frecuencias (Hz)",
-                    ValueTitle: "Ganancias (dB)",
-                    ExtraTitle: "Extra"
-                    );
+                //List<Process> ExcelProcesses = new List<Process>(); //Vemos los procesos de Excel.
+                //List<string> NombresDeProcesosExcel = new List<string>();
+                //foreach(Process proceso in System.Diagnostics.Process.GetProcesses())
+                //{
+                //    if (proceso.ProcessName.ToLower().Contains("excel"))
+                //    {
+                //        ExcelProcesses.Add(proceso);
+                //        NombresDeProcesosExcel.Add(proceso.ProcessName);
+                //    }
+                //}
 
-                GráficasFrecuenciaGanancia[i - 1].ChartType = XlChartType.xlLineMarkers;
-                GráficasFrecuenciaGanancia[i-1].HasTitle = true;
-                //Excel.ChartTitle TítuloGráfica = null;
-                //TítuloGráfica = GráficasFrecuenciaGanancia[i - 1].ChartTitle;
-                //TítuloGráfica.Text = allTheCells.Item[1 + ((i - 1) * 54), 1].Value2;
+                //foreach(string element in NombresDeProcesosExcel)
+                //{
+                //    Debug.WriteLine(element);
+                //}
+                //Debug.WriteLine("\n");
 
+                //foreach(Process proceso in ExcelProcesses)
+                //{
+                //    proceso.Kill();
+                //}
+                  
                 //Asignamos las celdas a las variables especificadas.
                 //Para las ganancias:
                 dummyCell1 = allTheCells.Item[4 + 54 * (i - 1), 2];
@@ -281,6 +289,55 @@ namespace Graficador___v3
                     SeriesDeDatos[j].Name = "Medición #" + ((j % 5) + 1).ToString(); //Le ponemos nombre a cada serie.
                 }
 
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                
+                GráficasFrecuenciaGanancia[i - 1].HasTitle = false; //Le quitamos el título si ya tenía la gráfica.
+                GráficasFrecuenciaGanancia[i - 1].HasTitle = true; //Le volvemos a poner el título a la gráfica.
+
+                Excel.Characters TítuloGráfica = null; //Creamos un objecto Characters para ponerle título a la gráfica.
+                string dummyString = null; //Creamos un string para guardar el título que le vamos a poner a la gráfica.
+                dummyString = Convert.ToString(allTheCells.Item[1 + ((i - 1) * 54), 1].Value2); //Obtenenmos el título de la gráfica y lo guardamos en la variable temporal.
+                TítuloGráfica = GráficasFrecuenciaGanancia[i - 1].ChartTitle.Characters; //Pasamos el título de la gráfica al objeto indicado.
+                
+                //Hacemos lo anterior antes de llenar la gráfica con datos.
+                //Lo siguiente se explica por sí mismo.
+                GráficasFrecuenciaGanancia[i - 1].HasLegend = true; //Activamos que tenga leyenda.
+                GráficasFrecuenciaGanancia[i - 1].ChartWizard( //Utilizamos el ChartWizard para ayudarnos a hacer las gráficas.
+                    //Gallery: XlChartType.xlLineMarkers,
+                    //PlotBy: XlRowCol.xlColumns,
+                    CategoryLabels: 45,
+                    SeriesLabels: 5,
+                    //HasLegend: true,
+                    //Title: allTheCells.Item[1 + ((i - 1) * 54), 1].Value2.ToString(),
+                    CategoryTitle: "Frecuencias (Hz)",
+                    ValueTitle: "Ganancias (dB)",
+                    ExtraTitle: "Extra"
+                    );
+
+                GráficasFrecuenciaGanancia[i - 1].ChartType = XlChartType.xlLineMarkers; //Cambiamos el tipo de gráfica.
+                GráficasFrecuenciaGanancia[i - 1].PlotBy = XlRowCol.xlColumns; //La serie de datos es una columna.
+                
+                if (dummyString == null) //Checamos si el string que vamos a asignar no está en blanco.
+                {
+                    MessageBox.Show("Object is Null", "Null object"); //Mandamos un aviso de que la celda de la que se obtiene el string está vacía.
+                }
+                try
+                {
+                    currentWorkbook.Activate(); //Activamos el libro de trabajo.
+                    TítuloGráfica.Text = dummyString;     //Asignamos el string a la propiedad Text; le ponemos el texto al...
+                                                          //título de la gráfica.
+                }
+                catch (COMException ex) //Atrapamos la excepción que sale.
+                {                   
+                    Debug.Write(ex.Message + "\n"); //Mostramos la excepción en la consola.
+                    Debug.WriteLine(ex.HResult.ToString("X")); //Mostramos su identificador HResult.
+                    Debug.WriteLine(dummyString); //Mostramos si el string está vacío o si estuvo vacío.
+                    Debug.WriteLine("");
+                }
+                //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                
                 //Modificamos los ejes.
                 Excel.Axes AxesOfTheChart = null; //Creamos un objeto de colección de ejes.
                 AxesOfTheChart = GráficasFrecuenciaGanancia[i - 1].Axes(); //Enlazamos el objeto con los ejes de la gráfica.
@@ -394,9 +451,9 @@ namespace Graficador___v3
             {
                 currentApplication.WindowState = Excel.XlWindowState.xlMaximized; //Maximizamos la ventana de la aplicación de Excel abierta.
                 SetForegroundWindow(currentApplication.Hwnd); //Hacemos la ventana de la aplicación esté al frente.
-
+                currentApplication.DisplayAlerts = false;
                 currentWorkbook.Charts.Item[1].Delete(); //Borramos cada hoja de gráfica.
-
+                currentApplication.DisplayAlerts = true;
             }
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -415,8 +472,7 @@ namespace Graficador___v3
                 if (titleCellDummy.Value2 != null) //Vemos si hay texto en la celda (si hay texto es porque se hizo una tabla).
                 {
                     numberOfTables++; //Aumentamos en uno el número de las tablas.
-                    titleCellRowNumber += 54;
-                    //titleCellDummy = null;
+                    titleCellRowNumber += 54;                    
                     titleCellDummy = allTheCells.Item[titleCellRowNumber, 1]; //Actualizamos las coordenadas de la celda de título.
                     stillCount = true; //Mantenemos la variable de control en verdadero.
                 }
@@ -449,6 +505,12 @@ namespace Graficador___v3
                     ValueTitle: "Ganancias (dB)",
                     ExtraTitle: "Extra"
                     );
+
+                GráficasFrecuenciaFase[i - 1].ChartType = XlChartType.xlLineMarkers;
+                GráficasFrecuenciaFase[i - 1].HasTitle = true;
+                Excel.ChartTitle TítuloGráfica = null;
+                TítuloGráfica = GráficasFrecuenciaFase[i - 1].ChartTitle;
+                TítuloGráfica.Text = allTheCells.Item[1 + ((i - 1) * 54), 1].Value2;
 
                 //Asignamos las celdas a las variables especificadas.
                 //Para las ganancias:
@@ -596,10 +658,17 @@ namespace Graficador___v3
             {
                 currentApplication.WindowState = Excel.XlWindowState.xlMaximized; //Maximizamos la ventana de la aplicación de Excel abierta.
                 SetForegroundWindow(currentApplication.Hwnd); //Hacemos la ventana de la aplicación esté al frente.
-
+                currentApplication.DisplayAlerts = false; //Desactivamos el DialogBox para aceptar la eliminación.
                 currentWorkbook.Charts.Item[1].Delete(); //Borramos cada hoja de gráfica.
+                currentApplication.DisplayAlerts = true; //Reactivamos mostrar los DialogBoxes.
 
             }
+        }
+
+        private void CerrarPrograma_Click(object sender, EventArgs e)
+        {
+            Form Form1 = this; //Creamos una instancia Form y le asignamos la ventana de la Form
+            Form1.Close(); //Cerrarmos la aplicación Windows Form.
         }
     }
 

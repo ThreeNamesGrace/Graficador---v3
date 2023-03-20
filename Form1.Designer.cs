@@ -31,6 +31,7 @@
             this.GraficadorFrecuenciaGanancia = new System.Windows.Forms.Button();
             this.GráficaFrecuenciaFase = new System.Windows.Forms.Button();
             this.BorraGráficas = new System.Windows.Forms.Button();
+            this.CerrarPrograma = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // GraficadorFrecuenciaGanancia
@@ -39,7 +40,7 @@
             this.GraficadorFrecuenciaGanancia.Font = new System.Drawing.Font("Microsoft Sans Serif", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.GraficadorFrecuenciaGanancia.Location = new System.Drawing.Point(0, 0);
             this.GraficadorFrecuenciaGanancia.Name = "GraficadorFrecuenciaGanancia";
-            this.GraficadorFrecuenciaGanancia.Size = new System.Drawing.Size(800, 153);
+            this.GraficadorFrecuenciaGanancia.Size = new System.Drawing.Size(489, 89);
             this.GraficadorFrecuenciaGanancia.TabIndex = 0;
             this.GraficadorFrecuenciaGanancia.Tag = "GrafFrecGan";
             this.GraficadorFrecuenciaGanancia.Text = "Gráfica Frecuencia-Ganancia";
@@ -50,9 +51,9 @@
             // 
             this.GráficaFrecuenciaFase.Dock = System.Windows.Forms.DockStyle.Top;
             this.GráficaFrecuenciaFase.Font = new System.Drawing.Font("Microsoft Sans Serif", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.GráficaFrecuenciaFase.Location = new System.Drawing.Point(0, 153);
+            this.GráficaFrecuenciaFase.Location = new System.Drawing.Point(0, 89);
             this.GráficaFrecuenciaFase.Name = "GráficaFrecuenciaFase";
-            this.GráficaFrecuenciaFase.Size = new System.Drawing.Size(800, 153);
+            this.GráficaFrecuenciaFase.Size = new System.Drawing.Size(489, 69);
             this.GráficaFrecuenciaFase.TabIndex = 1;
             this.GráficaFrecuenciaFase.Tag = "GrafFrecFase";
             this.GráficaFrecuenciaFase.Text = "Gráfica Frecuencia-Fase";
@@ -63,20 +64,34 @@
             // 
             this.BorraGráficas.Dock = System.Windows.Forms.DockStyle.Top;
             this.BorraGráficas.Font = new System.Drawing.Font("Microsoft Sans Serif", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.BorraGráficas.Location = new System.Drawing.Point(0, 306);
+            this.BorraGráficas.Location = new System.Drawing.Point(0, 158);
             this.BorraGráficas.Name = "BorraGráficas";
-            this.BorraGráficas.Size = new System.Drawing.Size(800, 153);
+            this.BorraGráficas.Size = new System.Drawing.Size(489, 74);
             this.BorraGráficas.TabIndex = 2;
             this.BorraGráficas.Tag = "BorraGráficas";
             this.BorraGráficas.Text = "Borrar Gráficas";
             this.BorraGráficas.UseVisualStyleBackColor = true;
             this.BorraGráficas.Click += new System.EventHandler(this.BorraGráficas_Click);
             // 
+            // CerrarPrograma
+            // 
+            this.CerrarPrograma.Dock = System.Windows.Forms.DockStyle.Top;
+            this.CerrarPrograma.Font = new System.Drawing.Font("Microsoft Sans Serif", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.CerrarPrograma.Location = new System.Drawing.Point(0, 232);
+            this.CerrarPrograma.Name = "CerrarPrograma";
+            this.CerrarPrograma.Size = new System.Drawing.Size(489, 74);
+            this.CerrarPrograma.TabIndex = 3;
+            this.CerrarPrograma.Tag = "CerrarPrograma";
+            this.CerrarPrograma.Text = "Cerrar Programa";
+            this.CerrarPrograma.UseVisualStyleBackColor = true;
+            this.CerrarPrograma.Click += new System.EventHandler(this.CerrarPrograma_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(489, 311);
+            this.Controls.Add(this.CerrarPrograma);
             this.Controls.Add(this.BorraGráficas);
             this.Controls.Add(this.GráficaFrecuenciaFase);
             this.Controls.Add(this.GraficadorFrecuenciaGanancia);
@@ -91,5 +106,6 @@
         private Button GraficadorFrecuenciaGanancia;
         private Button GráficaFrecuenciaFase;
         private Button BorraGráficas;
+        private Button CerrarPrograma;
     }
 }
